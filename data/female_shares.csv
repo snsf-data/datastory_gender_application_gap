@@ -1,0 +1,88 @@
+Division,CallEndDate,n,fem_share,fi
+SSH,2014-10-01,511,35.1,Project Funding
+SSH,2015-04-01,567,32.2,Project Funding
+SSH,2015-10-01,519,34.6,Project Funding
+SSH,2016-04-01,513,34.9,Project Funding
+SSH,2016-10-01,340,35.6,Project Funding
+SSH,2017-04-03,289,37.7,Project Funding
+SSH,2017-10-02,294,34,Project Funding
+SSH,2018-04-03,324,36.7,Project Funding
+SSH,2018-10-01,299,39.1,Project Funding
+SSH,2019-04-02,335,36.5,Project Funding
+SSH,2019-10-01,342,39.5,Project Funding
+SSH,2020-04-08,421,31.1,Project Funding
+SSH,2020-10-01,403,39,Project Funding
+MINT,2014-10-01,562,14.2,Project Funding
+MINT,2015-04-01,567,12,Project Funding
+MINT,2015-10-01,566,11.8,Project Funding
+MINT,2016-04-01,705,18.3,Project Funding
+MINT,2016-10-01,322,15,Project Funding
+MINT,2017-04-03,337,15.1,Project Funding
+MINT,2017-10-02,307,15,Project Funding
+MINT,2018-04-03,444,12.9,Project Funding
+MINT,2018-10-01,302,14.9,Project Funding
+MINT,2019-04-02,331,15.5,Project Funding
+MINT,2019-10-01,340,15.6,Project Funding
+MINT,2020-04-08,528,15.9,Project Funding
+MINT,2020-10-01,347,15.9,Project Funding
+LS,2014-10-01,583,22.5,Project Funding
+LS,2015-04-01,615,20.8,Project Funding
+LS,2015-10-01,597,21,Project Funding
+LS,2016-04-01,702,22.5,Project Funding
+LS,2016-10-01,388,22.3,Project Funding
+LS,2017-04-03,392,24.5,Project Funding
+LS,2017-10-02,357,23.3,Project Funding
+LS,2018-04-03,427,26.5,Project Funding
+LS,2018-10-01,402,29.2,Project Funding
+LS,2019-04-02,376,25.1,Project Funding
+LS,2019-10-01,407,28.3,Project Funding
+LS,2020-04-08,535,26.5,Project Funding
+LS,2020-10-01,394,28.2,Project Funding
+NA,2017-04-10,374,13.9,BRIDGE (Discovery)
+NA,2018-04-16,184,13,BRIDGE (Discovery)
+NA,2019-04-08,171,21.6,BRIDGE (Discovery)
+NA,2020-05-11,169,20.7,BRIDGE (Discovery)
+NA,2016-12-12,101,27.7,BRIDGE (PoC)
+NA,2017-03-13,63,22.2,BRIDGE (PoC)
+NA,2017-06-14,27,25.9,BRIDGE (PoC)
+NA,2017-09-11,32,21.9,BRIDGE (PoC)
+NA,2017-12-11,34,20.6,BRIDGE (PoC)
+NA,2018-03-19,32,28.1,BRIDGE (PoC)
+NA,2018-06-04,21,28.6,BRIDGE (PoC)
+NA,2018-09-10,21,19,BRIDGE (PoC)
+NA,2018-12-10,31,35.5,BRIDGE (PoC)
+NA,2019-03-11,38,18.4,BRIDGE (PoC)
+NA,2019-06-03,25,16,BRIDGE (PoC)
+NA,2019-09-09,37,21.6,BRIDGE (PoC)
+NA,2019-12-09,37,27,BRIDGE (PoC)
+NA,2020-03-09,26,23.1,BRIDGE (PoC)
+NA,2020-06-15,41,29.3,BRIDGE (PoC)
+NA,2020-09-07,41,29.3,BRIDGE (PoC)
+NA,2015-01-15,522,17.4,Sinergia
+NA,2016-06-01,326,21.8,Sinergia
+NA,2016-12-01,224,22.9,Sinergia
+NA,2017-06-01,237,24.9,Sinergia
+NA,2017-12-01,233,24.5,Sinergia
+NA,2018-06-01,266,21.1,Sinergia
+NA,2018-12-03,267,21,Sinergia
+NA,2019-06-03,197,19.8,Sinergia
+NA,2019-12-02,244,24.6,Sinergia
+NA,2020-06-02,235,21.3,Sinergia
+NA,2018-02-01,173,38.7,Postdoc.Mobility
+NA,2018-08-02,148,29.7,Postdoc.Mobility
+NA,2019-02-01,155,39.4,Postdoc.Mobility
+NA,2019-08-02,128,34.4,Postdoc.Mobility
+NA,2020-02-03,161,42.2,Postdoc.Mobility
+NA,2020-08-03,144,43.8,Postdoc.Mobility
+NA,2015-03-01,332,37.8,Early Postdoc.Mobility
+NA,2015-09-01,352,38.4,Early Postdoc.Mobility
+NA,2016-03-01,391,37.6,Early Postdoc.Mobility
+NA,2016-09-01,357,38.7,Early Postdoc.Mobility
+NA,2017-03-01,370,39.2,Early Postdoc.Mobility
+NA,2017-09-01,367,40.1,Early Postdoc.Mobility
+NA,2018-03-01,338,37.9,Early Postdoc.Mobility
+NA,2018-09-03,302,41.1,Early Postdoc.Mobility
+NA,2019-03-01,323,40.2,Early Postdoc.Mobility
+NA,2019-09-02,345,39.7,Early Postdoc.Mobility
+NA,2020-03-02,342,40.9,Early Postdoc.Mobility
+NA,2020-09-01,355,41.4,Early Postdoc.Mobility

@@ -1,0 +1,581 @@
+---
+params: 
+  title: ""
+  publication_date: ""
+  doi: ""
+output: 
+  html_document:
+    anchor_sections: false
+    theme: null
+    highlight: null
+    mathjax: null
+    css: ["style.css", "https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700&display=swap"]
+    self_contained: true
+title: "`r params$title`"
+---
+
+```{r general-setup, include=FALSE}
+## This file contains the FRENCH version of the data story
+
+# Set general chunk options
+knitr::opts_chunk$set(echo = FALSE, fig.showtext = TRUE, fig.retina = 3, 
+                      fig.align = "center", warning = FALSE, message = FALSE)
+
+# Install pacman package if needed
+if (!require("pacman")) {
+  install.packages("pacman")
+  library(pacman)
+}
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+p_load(tidyverse,
+       lubridate,
+       scales, 
+       conflicted, 
+       jsonlite,
+       here, 
+       ggiraph)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("layout", "plotly")
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 320)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale("LC_TIME", "French")
+
+# Create function to print number with local language-specific format 
+print_num <- function(x) snf.datastory::print_num(x, lang = "fr")
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline <- function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+```
+
+```{r print-header-infos, results='asis'}
+# Add publication date to header
+cat(format(as_datetime(params$publication_date), "%d.%m.%Y"))
+```
+
+```{r story-specific-setup, include=FALSE}
+# Load female share data in various funding instruments
+female_shares <- read_csv(here("data", "female_shares.csv")) 
+```
+
+__Pendant la pandémie de Covid-19, les femmes ont vu leurs charges domestiques augmenter. Des études et des enquêtes le confirment. Les chercheuses ont-elles donc soumis moins de requêtes au FNS ? Selon les analyses, leur part est restée stable à une exception près.__
+
+Le 16 mars 2020, le Conseil fédéral déclarait le pays en situation extraordinaire, et cela devait durer jusqu’au 11 mai. Alors que les scientifiques, hommes et femmes, ont commencé à travailler à domicile, les écoles et les garderies ont dû fermer. Par le biais de plusieurs études et enquêtes, le FNS a évalué la situation des chercheuses durant la pandémie. Conclusion : elles ont effectivement eu plus de travail de prise en charge et ont souffert de désavantages sur le plan professionnel. Plus d’informations à ce sujet ci-dessous.
+
+Cette charge différenciée entre les sexes a-t-elle également eu un impact sur l’encouragement de la recherche du FNS ? Nous avons examiné si la proportion de femmes avait diminué dans les demandes de subsides. Pour ce faire, nous avons analysé les données de plusieurs grands appels à projets depuis mars 2020.
+
+### Un effondrement uniquement dans les sciences humaines et sociales
+
+L’encouragement de projets est le principal instrument de financement du FNS. Ici, la date limite de soumission des requêtes du printemps, le 1er avril, était également très proche du début du confinement. Cependant, le FNS a voulu désamorcer le problème de délai causé par cet immobilisme forcé et soudain. Il a donc reporté l’échéance au 8 avril, soit trois bonnes semaines après la déclaration de la situation extraordinaire. Il en est résulté un nombre accru de requêtes dans les trois domaines de recherche.
+
+On reconnait évidemment qu’un confinement affecte différemment les disciplines. Certaines chercheuses et certains chercheurs sont plus à même de travailler depuis leur domicile que d’autres, qui dépendent de l’accès aux laboratoires ou aux archives, par exemple. C’est pourquoi nous avons examiné la proportion des femmes de façon distincte pour les trois domaines de recherche.
+
+<div class="plot-box">
+<div class="plot-title">Proportion des requêtes de femmes dans l’encouragement de projets</div>
+
+<div class="hide-mobile">
+```{r project-funding-desktop-tablet, out.width="100%", fig.height=5}
+# Subset the data to be displayed in this plot
+plot_data <- female_shares %>%  
+  filter(fi == "Project Funding") %>%  
+  mutate(data_id = row_number()) %>% 
+  # Translate
+  mutate(fi = "Encouragement de projets")
+
+# Function to create ggplot object
+create_plot_pf <- function() {
+  # Data for manually added grid lines
+  seg_data <- tibble(x = rep(ymd("2014-10-01"), 6),
+                     xend = rep(ymd("2021-01-31"), 6), 
+                     y = seq(0, 50, 10),
+                     yend = seq(0, 50, 10))
+  
+  # Create the plot
+  plot_data %>%  
+    # Translate and order the division name abbreviations
+    mutate(Division = case_when(Division == "SSH" ~ "SHS", 
+                                Division == "MINT" ~ "MINT", 
+                                Division == "LS" ~ "SV", 
+                                TRUE ~ "Unknown"), 
+           Division = fct_relevel(Division, c("SHS", "MINT", "SV"))) %>% 
+    ggplot() + 
+    # Manually add the grid lines as segments, as ggiraph does not support 
+    # correctly dashed panel grid lines and geom_rect highlighted area does not 
+    # span until the end of the plotting area (panel grid lines are longer 
+    # than the plotting area)
+    geom_segment(data = seg_data, aes(x = x, y = y, xend = xend, yend = yend),
+                 size = 0.2, color = "#d3d3d3", linetype = 3) +
+    # Highlight the broad period of measures
+    geom_rect(
+      # Independent data to avoid overplotting
+      data = tibble(col = 1), 
+      aes(
+        xmin = ymd("2020-03-16"),
+        xmax = ymd("2021-01-31"),
+        ymin = 0,
+        ymax = 50, 
+        text = "Mesures actives liées au coronavirus"
+      ),
+      alpha = 0.25,
+      fill = "#EA3939",
+      color = NA,
+      size = 1
+    ) +
+    # Highlight the hard lockdown
+    geom_rect(
+      # Independent data to avoid overplotting
+      data = tibble(col = 1), 
+      aes(
+        xmin = ymd("2020-03-16"),
+        xmax = ymd("2020-05-11"),
+        ymin = 0,
+        ymax = 50, 
+        text = paste0("<b>Confinement avec fermeture des écoles</b><br>",
+                      "«Situation extraordinaire», 3-16-2020 - 5-11-2020")
+      ),
+      alpha = 0.25,
+      fill = "#EA3939",
+      color = NA,
+      size = 1
+    ) +
+    geom_line(aes(x = CallEndDate, y = fem_share, color = Division,
+                  group = Division), size = 0.6, 
+              # Draw point instead of square symbol
+              key_glyph = draw_key_point)  +
+    # Hack to add a (nearly) invisible hover point for every data point, in 
+    # order to define a tooltip with ggiraph. Tooltips for geom_line_interactive
+    # support only one distinct tooltip for the whole line, therefore, we use
+    # geom_point here. 
+    geom_point_interactive(
+      aes(x = CallEndDate, y = fem_share, 
+          tooltip = paste0("<b>", Division, " ", fi, 
+                           "</b>, mise en concours : ",
+                        format(CallEndDate, "%B %Y"),
+                        "<br>Proportion de femmes :",
+                        " <b>", round(fem_share), " %</b> avec <b>", n,
+                        "</b> soumissions")), size = 2, color = "white", 
+      alpha = 0.01) +
+    labs(x = NULL, y = NULL) +
+    scale_color_manual(values = get_datastory_scheme("qualitative")) +
+    guides(color = guide_legend(override.aes = list(size = 3))) + 
+    scale_x_date(date_breaks = "1 year", date_labels = "%Y", 
+                 limits = c(ymd("2014-10-01", ymd("2021-01-31"))), 
+                 expand = c(0, 0)) +
+    scale_y_continuous(limits = c(0, 50), labels = percent_format(scale = 1)) +
+    get_datastory_theme(title_axis = "y") + 
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+}
+
+# Create ggiraph object
+girafe(ggobj = create_plot_pf(), 
+       height_svg = 3.8, 
+       options = list(
+         opts_toolbar(saveaspng = FALSE),
+         opts_tooltip(
+           css = get_ggiraph_tooltip_css(),
+           opacity = 0.8,
+           delay_mouseover = 0,
+           delay_mouseout = 0
+         )
+       ))
+
+# Project Funding SSH, mean
+pf_ssh_mean <- plot_data %>% 
+  filter(Division == "SSH") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# Project Funding SSH, min
+pf_ssh_min <- plot_data %>% 
+  filter(Division == "SSH") %>% 
+  pull(n) %>% 
+  min()
+
+# Project Funding SSH, max
+pf_ssh_max <- plot_data %>% 
+  filter(Division == "SSH") %>% 
+  pull(n) %>% 
+  max()
+
+# Project Funding MINT, mean
+pf_mint_mean <- plot_data %>% 
+  filter(Division == "MINT") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# Project Funding MINT, min
+pf_mint_min <- plot_data %>% 
+  filter(Division == "MINT") %>% 
+  pull(n) %>% 
+  min()
+
+# Project Funding MINT, max
+pf_mint_max <- plot_data %>% 
+  filter(Division == "MINT") %>% 
+  pull(n) %>% 
+  max()
+
+# Project Funding LS, mean
+pf_ls_mean <- plot_data %>% 
+  filter(Division == "LS") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# Project Funding LS, min
+pf_ls_min <- plot_data %>% 
+  filter(Division == "LS") %>% 
+  pull(n) %>% 
+  min()
+
+# Project Funding LS, max
+pf_ls_max <- plot_data %>% 
+  filter(Division == "LS") %>% 
+  pull(n) %>% 
+  max()
+
+# Put together plot caption
+caption <-
+  paste0(
+    "Demandes de subsides de l’ensemble des candidat·es dès 2015, période",
+    " avec les mesures actives liées au coronavirus surlignées en rouge,",
+    " confinement avec fermeture des écoles en rouge foncé. Nombre moyen de", 
+    " demandes par mise au concours : SHS ", pf_ssh_mean, " (", pf_ssh_min, "-",
+    pf_ssh_max, "), MINT ", pf_mint_mean, " (", pf_mint_min, "-", pf_mint_max,
+    "), SV ", pf_ls_mean, " (", pf_ls_min, "-", pf_ls_max, ")."
+  )
+```
+<div class="caption">
+`r caption`
+</div>
+</div>
+
+<div class="hide-tablet hide-desktop">
+```{r project-funding-mobile, fig.width=3.5, fig.height=3}
+create_plot_pf()
+```
+<div class="caption">
+`r caption`
+</div>
+</div>
+</div>
+
+Ce que montrent les données : dans le domaine des sciences humaines et sociales (SHS), la proportion de femmes a baissé de 8,5 points de pourcentage lors de la mise au concours d’avril dans l’encouragement de projets. Il n’y a pas eu de baisse de ce type en mathématiques, sciences naturelles et de l'ingénieur (MINT) ni dans le domaine des sciences de la vie (SV). Toutefois, les données de l’appel à projets d’octobre 2020 indiquent déjà un retour à la normale dans les SHS.
+
+### Pas de fluctuations exceptionnelles
+
+Outre l’encouragement de projets, nous avons examiné d’autres instruments de financement dont les délais de soumission étaient fixés pendant ou après le confinement de mars 2020. Ces instruments ont un nombre de requêtes bien inférieur, c’est pourquoi nous ne les avons pas ventilés par domaine de recherche. Le nombre total de candidatures dans ces instruments est aussi resté stable, même pour les appels à projets proches de la période de confinement.
+
+<div class="plot-box">
+<div class="plot-title">Proportion de requêtes de la part des femmes dans les programmes BRIDGE, Sinergia et Postdoc.Mobility</div>
+<div class="hide-mobile">
+```{r other-fis-tablet-desktop, out.width="100%", fig.height=3}
+# Subset the FI for this plot
+plot_data <- female_shares %>%  
+  filter(fi != "Project Funding",
+         year(CallEndDate) >= 2017) %>%  
+  # FI ordering
+  mutate(fi = fct_relevel(fi, c("BRIDGE (Discovery)",
+                                "BRIDGE (PoC)", 
+                                "Sinergia",
+                                "Postdoc.Mobility",
+                                "Early Postdoc.Mobility")))
+
+# Function to create ggplot plot for mobile/desktop
+draw_plot_other_fis <- function(mobile = FALSE) {
+  
+  # Data for manually added grid lines
+  seg_data <- tibble(x = rep(ymd("2017-03-01"), 6),
+                     xend = rep(ymd("2021-01-31"), 6),
+                     y = seq(0, 50, 10),
+                     yend = seq(0, 50, 10))
+  
+  # Create the plot
+  p <- plot_data %>% 
+    ggplot() + 
+    # Manually add the grid lines as segments, as ggiraph does not support 
+    # correctly dashed panel grid lines and geom_rect highlighted area does not 
+    # span until the end of the plotting area (panel grid lines are longer 
+    # than the plotting area)
+    geom_segment(data = seg_data, aes(x = x, y = y, xend = xend, yend = yend),
+                 size = 0.2, color = "#d3d3d3", linetype = 3) +
+    # Highlight the broad period of measures
+    geom_rect(
+      # Independent data to avoid overplotting
+      data = tibble(col = 1), 
+      aes(
+        xmin = ymd("2020-03-16"),
+        xmax = ymd("2021-01-31"),
+        ymin = 0,
+        ymax = 50, 
+        text = "Mesures actives liées au coronavirus"
+      ),
+      alpha = 0.25,
+      fill = "#EA3939",
+      color = NA,
+      size = NA
+    ) +
+    # Highlight the hard lockdown
+    geom_rect(
+      # Independent data to avoid overplotting
+      data = tibble(col = 1), 
+      aes(
+        xmin = ymd("2020-03-16"),
+        xmax = ymd("2020-05-11"),
+        ymin = 0,
+        ymax = 50, 
+        text = paste0("<b>Confinement avec fermeture des écoles</b><br>",
+                      "«Situation extraordinaire», 3-16-2020 - 5-11-2020")
+      ),
+      alpha = 0.25,
+      fill = "#EA3939",
+      color = NA,
+      size = NA
+    ) + 
+    geom_line(aes(x = CallEndDate, y = fem_share, group = 1, 
+                  tooltip = paste0(fi, ", Call: ", format(CallEndDate, "%B %Y"), 
+                                   "<br>Share of women:", 
+                                   " <b>", round(fem_share), "%</b> at <b>", n, 
+                                   "</b> submissions")), 
+              color = get_datastory_scheme("qualitative")[1], size = 0.4) + 
+    # Hack to add a (nearly) invisible hover point for every data point, in
+    # order to define a tooltip with ggiraph. Tooltips for geom_line_interactive
+    # support only one distinct tooltip for the whole line, therefore, we use
+    # geom_point here.
+    geom_point_interactive(
+      aes(x = CallEndDate, y = fem_share,
+          tooltip = paste0(fi, ", mise en concours : ", 
+                           format(CallEndDate, "%B %Y"),
+                           "<br>Proportion de femmes :",
+                           " <b>", round(fem_share), " %</b> avec <b>", n,
+                           "</b> soumissions")), size = 2, color = "white",
+      alpha = 0.01) +
+    scale_y_continuous(limits = c(0, 50), labels = percent_format(scale = 1), 
+                       breaks = seq(0, 50, 10)) +
+    get_datastory_theme(title_axis = "y", tick_axis = "x") + 
+    labs(x = NULL, y = NULL) +
+    scale_x_date(date_breaks = "1 year", date_labels = "%Y",
+                 limits = c(ymd("2017-01-01", NA))) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1), 
+      strip.text = element_text(size = 7), 
+      plot.margin = margin(0, 0, 0, 0, "mm")
+    ) 
+  
+  p
+  
+  if (mobile) {
+    p <- p + facet_wrap(~fi, ncol = 1) 
+  } else {
+    p <- p + facet_wrap(~fi, nrow = 1) +
+      # Some spacing so there is no overlap of the labels
+      theme(
+        panel.spacing = unit(0.35, "cm")
+      )
+  }
+  
+  p
+}
+
+# Create ggiraph object
+girafe(ggobj = draw_plot_other_fis(mobile = FALSE), 
+       height_svg = 2.5, 
+       options = list(
+         opts_toolbar(saveaspng = FALSE),
+         opts_tooltip(
+           css = get_ggiraph_tooltip_css(),
+           opacity = 0.8,
+           delay_mouseover = 0,
+           delay_mouseout = 0
+         )
+       ))
+
+
+## Calculate some variables to be displayed in the plot caption
+
+# BRIDGE (Discovery), mean
+bridge_disc_mean <-
+  plot_data %>% 
+  filter(fi == "BRIDGE (Discovery)") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# BRIDGE (Discovery), minimum
+bridge_disc_min <- plot_data %>% 
+  filter(fi == "BRIDGE (Discovery)") %>% 
+  pull(n) %>% 
+  min()
+
+# BRIDGE (Discovery), maximum
+bridge_disc_max <- plot_data %>% 
+  filter(fi == "BRIDGE (Discovery)") %>% 
+  pull(n) %>% 
+  max()
+
+###
+
+# BRIDGE (PoC), mean
+bridge_poc_mean <-
+  plot_data %>% 
+  filter(fi == "BRIDGE (PoC)") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# BRIDGE (PoC), minimum
+bridge_poc_min <- plot_data %>% 
+  filter(fi == "BRIDGE (PoC)") %>% 
+  pull(n) %>% 
+  min()
+
+# BRIDGE (PoC), maximum
+bridge_poc_max <- plot_data %>% 
+  filter(fi == "BRIDGE (PoC)") %>% 
+  pull(n) %>% 
+  max()
+
+###
+
+# Sinergia, mean
+sinergia_mean <- plot_data %>% 
+  filter(fi == "Sinergia") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# Sinergia, minimum
+sinergia_min <- plot_data %>% 
+  filter(fi == "Sinergia") %>% 
+  pull(n) %>% 
+  min()
+
+# Sinergia, maximum
+sinergia_max <- plot_data %>% 
+  filter(fi == "Sinergia") %>% 
+  pull(n) %>% 
+  max()
+
+###
+
+# Postdoc.Mobility, mean
+pm_mean <-plot_data %>% 
+  filter(fi == "Postdoc.Mobility") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# Postdoc.Mobility, minimum
+pm_min <- plot_data %>% 
+  filter(fi == "Postdoc.Mobility") %>% 
+  pull(n) %>% 
+  min()
+
+# Postdoc.Mobility, maximum
+pm_max <- plot_data %>% 
+  filter(fi == "Postdoc.Mobility") %>% 
+  pull(n) %>% 
+  max()
+
+###
+
+# Early Postdoc.Mobility, mean
+epm_mean <- plot_data %>% 
+  filter(fi == "Early Postdoc.Mobility") %>% 
+  pull(n) %>% 
+  mean() %>% 
+  round()
+
+# Early Postdoc.Mobility, minimum
+epm_min <- plot_data %>% 
+  filter(fi == "Early Postdoc.Mobility") %>% 
+  pull(n) %>% 
+  min()
+
+# Early Postdoc.Mobility, maximum
+epm_max <- plot_data %>% 
+  filter(fi == "Early Postdoc.Mobility") %>% 
+  pull(n) %>% 
+  max()
+
+# Put together plot caption 
+caption <- paste0("Demandes de l’ensemble des requérant·es à partir de 2017,", 
+                  " périodes avec des mesures actives liées au coronavirus",
+                  " surlignées en rouge. Confinement avec fermeture des",
+                  " écoles en rouge foncé. Nombre moyen de requêtes par mise", 
+                  " au concours : BRIDGE (Discovery) ", bridge_disc_mean, " (", 
+                  bridge_disc_min, "-", bridge_disc_max, 
+                  "), BRIDGE (Proof of Concept) ", 
+                  bridge_poc_mean, " (", bridge_poc_min, "-", bridge_poc_max, 
+                  "), Sinergia ", sinergia_mean, " (", sinergia_min, "-", 
+                  sinergia_max, "), Postdoc.Mobility ", pm_mean, " (", 
+                  pm_min, "-", pm_max, "), Early Postdoc.Mobility ", 
+                  epm_mean, " (", epm_min, "-", epm_max, ").")
+```
+</div>
+<div class="hide-tablet hide-desktop">
+```{r other-fis-mobile, fig.width=3.5, fig.height=12}
+draw_plot_other_fis(mobile = TRUE)
+```
+</div>
+<div class="caption" style="width:100%">
+`r caption`
+</div>
+</div>
+
+Dans les deux volets de BRIDGE, un programme commun du FNS et d’Innosuisse, nous n’avons pu trouver aucun effet qui ne puisse être attribué à des fluctuations normales. Cela vaut également pour les instruments de carrières Postdoc.Mobility et Early Postdoc.Mobility. Pour l’instrument Sinergia, qui se concentre sur la recherche interdisciplinaire et collaborative, la proportion de femmes est également restée stable ; elle se situe entre 20 et 25 %.
+
+En conclusion : sur la base de l’analyse des requêtes du FNS, nous n’avons pu jusqu’à présent identifier aucune anomalie, hormis la baisse ponctuelle enregistrée dans les sciences humaines et sociales pour l’instrument encouragement de projets. Il est impossible de déterminer avec certitude s’il s’agit d’une conséquence de la crise de Covid-19 ou d’une fluctuation statistique normale. Cependant, ce résultat démontre certainement que le FNS devrait continuer à surveiller les chiffres de près à l’avenir.
+
+### Prolongation pour quelle raison ?
+
+Pendant la pandémie, les chercheuses et les chercheurs ont la possibilité de demander au FNS une prolongation de leurs projets. L’une des raisons pourrait être les exigences supplémentaires liées au fait de travailler à la maison – lorsque les parents doivent s’occuper des enfants parce que les écoles et les garderies sont fermées. Ces requêtes pourraient donc fournir des indications importantes sur le fait que les chercheuses sont désavantagées dans cette situation extraordinaire. Le FNS analysera donc les motifs de prolongation prochainement. Nous accorderons une attention particulière aux différences entre les disciplines et les sexes, ainsi qu’à la question de la garde des enfants.
+
+<div class='info-box'>
+
+### Des chercheuses sous pression
+
+Ce n’est pas un secret : en Suisse (et ailleurs), les femmes effectuent la <a href="https://www.bfs.admin.ch/bfs/fr/home/statistiques/travail-remuneration/travail-non-remunere/travail-domestique-familial.html" target="_blank">majeure parties des travaux ménagers et des soins non rémunérés</a>. Dans le même temps, la majorité des femmes de ce pays exercent également un emploi ; pratiquement aucun autre pays en Europe n’a un <a href="https://www.admin.ch/gov/fr/accueil/documentation/communiques.msg-id-81297.html" target="_blank">taux de femmes et de mères actives</a>, mesuré en heures, <a href="https://www.admin.ch/gov/fr/accueil/documentation/communiques.msg-id-81297.html" target="_blank">plus élevé que celui de la Suisse</a>.
+
+Ces chiffres indiquent un rapport inégal entre les sexes, qui laisse des traces, notamment dans le domaine de la recherche. La lourde charge de travail domestique et avec les enfants rend difficile, voire impossible, pour de nombreuses femmes de suivre la concurrence accélérée en matière de publications et de financement par des tiers. Ou formulé en d’autres termes : l’engagement plus important des mères par rapport aux pères dans les soins aux enfants donne aux scientifiques masculins un avantage concurrentiel considérable. C’est une raison importante de la sous-représentation des femmes dans la recherche, en particulier dans des fonctions dirigeantes comme le professorat.
+
+### Une répartition encore plus inégale
+
+Déjà au début de la pandémie de Covid-19, les médias avaient émis l’espoir que les relations entre les sexes pourraient éventuellement aussi évoluer. Une fois les hommes travaillant à domicile, ne serait-il pas évident qu’une redistribution des tâches aurait lieu à la maison ?
+
+Les résultats d’une enquête représentative menée en <a href="https://www.newsd.admin.ch/newsd/message/attachments/61707.pdf" target="_blank">Suisse (en allemand)</a> et en <a href="https://www.bertelsmann-stiftung.de/fileadmin/files/user_upload/Spotlight_Rollen_und_Aufgabenverteilung_bei_Frauen_und_Maennern_in_Zeiten_von_Corona.pdf" target="_blank">Allemagne</a> mmontrent qu’une grande partie des travaux domestiques et familiaux supplémentaires et de l’enseignement à domicile était assurée par les mères. En Suisse, les mères hautement qualifiées ont notamment déclaré qu’elles avaient moins de temps pour travailler en raison de la charge de travail domestique supplémentaire. Ces tendances ressortent également d’une <a href="https://bibliothek.wzb.eu/artikel/2020/f-23507.pdf" target="_blank">enquête menée auprès de professeur·es en Allemagne</a> : elles ont déclaré plus souvent que leurs collègues masculins qu’elles avaient moins de temps à consacrer à leurs recherches en raison des tâches supplémentaires autour des enfants et du passage à l’enseignement numérique. Une <a href="https://s3.amazonaws.com/kajabi-storefronts-production/sites/45828/themes/2439331/downloads/vdBOifYHSSmJEzZMBiHA_Sharing_the_Caring.pdf" target="_blank">enquête britannique</a> montre : dans les familles dites à double carrière, dans lesquelles les deux parents travaillent dans le milieu scientifique, ce sont principalement les mères qui s’occupent des enfants. Elles ont dès lors pu consacrer moins de temps à leurs recherches. Dans une <a href="https://www.nature.com/articles/s41562-020-0921-y" target="_blank">enquête menée auprès de chercheuses et chercheurs de l’UE et des États-Unis en avril 2020 (en anglais)</a>, ce sont principalement des femmes scientifiques ayant de jeunes enfants qui ont répondu qu’elles avaient moins de temps pour la recherche. L’<a href="https://blog.degruyter.com/wp-content/uploads/2020/06/De-Gruyter-Author-pulse-survey-results.pdf">enquête de l’éditeur De Gruyter (en anglais)</a> brosse un tableau similaire : 27 % des hommes scientifiques interrogés, contre seulement 19 % des femmes scientifiques, ont déclaré avoir eu plus de temps que d’ordinaire pour leurs recherches pendant le confinement. Près de 25 % des chercheurs ont pu travailler sans restrictions pendant la période de confinement, ce qui n’était vrai que pour 15 % des chercheuses.
+
+### Les femmes perdent du terrain
+
+Comment la charge de travail inégale a-t-elle affecté la productivité des femmes scientifiques au printemps 2020 ? L’activité de publication des scientifiques en 2020 a globalement augmenté de manière significative. Par exemple, entre février et mai 2020, <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3712813" target="_blank">près de 60 % de manuscrits en plus (en anglais)</a> ont été soumis aux plus de 2300 revues publiées par Elsevier par rapport à la même période de l’année précédente. Cependant, l’activité de publication des femmes a proportionnellement moins augmenté que celle des hommes.
+
+Un certain nombre d’analyses révèlent une tendance similaire sur les serveurs de préimpression, où les articles sont téléchargés avant leur publication dans les revues. Un <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3623492" target="_blank">exemple aux États-Unis (en anglais)</a> : dans les dix semaines qui ont suivi le début du confinement, le volume des publications sur les serveurs de préimpression pour la recherche en sciences sociales a augmenté de 35 % dans l’ensemble – mais la majorité de cette augmentation est attribuable aux hommes. Bien que le volume de publication des femmes ait également augmenté, il a diminué de 13,2 % par rapport à celui des hommes. On peut également observer que les femmes ont soumis <a href="https://www.inet.econ.cam.ac.uk/research-papers/wp-abstracts?wp=2022">moins d’articles liés à la recherche sur les pandémies (en anglais)</a> que les hommes.
+
+</div>
