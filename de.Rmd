@@ -278,7 +278,7 @@ caption <-
 </div>
 
 <div class="hide-tablet hide-desktop">
-```{r project-funding-mobile, fig.width=3.5, fig.height=3}
+```{r project-funding-mobile, out.width="100%", fig.height=4.5}
 create_plot_pf()
 ```
 <div class="caption">
@@ -542,7 +542,7 @@ caption <- paste0("Bewerbungen aller Gesuchsstellenden ab 2017, Perioden mit",
 ```
 </div>
 <div class="hide-tablet hide-desktop">
-```{r other-fis-mobile, fig.width=3.5, fig.height=12}
+```{r other-fis-mobile, out.width="100%", fig.height=16}
 draw_plot_other_fis(mobile = TRUE)
 ```
 </div>
